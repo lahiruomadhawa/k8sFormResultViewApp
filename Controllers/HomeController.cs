@@ -1,32 +1,39 @@
-using System.Diagnostics;
-using k8sFormResultViewApp.Models;
+// Controllers/HomeController.cs
+using k8sFormResultViewApp.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace k8sFormResultViewApp.Controllers
+namespace ResultApp.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IPersonService _personService;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IPersonService personService, ILogger<HomeController> logger)
         {
+            _personService = personService;
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
-        }
+            try
+            {
+                var persons = await _personService.GetAllPersonsAsync();
+                var totalCount = await _personService.GetTotalCountAsync();
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+                ViewBag.TotalCount = totalCount;
+                ViewBag.LastRefresh = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                return View(persons);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading persons");
+                ViewBag.Error = "Error loading data. Please try again.";
+                ViewBag.TotalCount = 0;
+                return View(new List<k8sFormResultViewApp.Models.PersonViewModel>());
+            }
         }
     }
 }

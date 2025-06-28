@@ -1,8 +1,172 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<k8sFormResultViewApp.Models.PersonViewModel>
+@{
+    ViewData["Title"] = "Person Results";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Person Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .person-card {
+            border-left: 4px solid #007bff;
+            transition: transform 0.2s ease;
+        }
+
+            .person-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+
+        .stats-card {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-users"></i> Person Results</h1>
+                    <div class="text-end">
+                        <button class="btn btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <br>
+                        <small class="text-muted">Last refresh: @ViewBag.LastRefresh</small>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card stats-card">
+                            <div class="card-body text-center">
+                                <h2>@ViewBag.TotalCount</h2>
+                                <p class="mb-0"><i class="fas fa-users"></i> Total Persons</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h2>@(Model?.Count ?? 0)</h2>
+                                <p class="mb-0"><i class="fas fa-list"></i> Displayed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h2>@(Model?.Count > 0 ? Model.First().FormattedDate.Split(' ')[0] : "N/A")</h2>
+                                <p class="mb-0"><i class="fas fa-calendar"></i> Latest Entry</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+                    </div>
+                }
+
+                <!-- Persons List -->
+                <div class="row">
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var person in Model)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card person-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-user text-primary"></i> @person.FullName
+                                        </h5>
+                                        <p class="card-text">
+                                            <i class="fas fa-map-marker-alt text-danger"></i> @person.Address
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock text-info"></i> @person.FormattedDate
+                                        </small>
+                                    </div>
+                                    <div class="card-footer bg-light">
+                                        <small class="text-muted">ID: @person.Id</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                <h4>No persons found</h4>
+                                <p>Submit the form to add persons to the database, then refresh this page to see the results!</p>
+                                <button class="btn btn-primary" onclick="location.reload()">
+                                    <i class="fas fa-sync-alt"></i> Refresh Now
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model != null && Model.Any())
+                {
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-light text-center">
+                                <i class="fas fa-lightbulb text-warning"></i>
+                                <strong>Tip:</strong> Click the refresh button or reload the page to see new entries!
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Refresh Button -->
+    <button class="btn btn-primary btn-lg refresh-btn" onclick="location.reload()" title="Refresh Data">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh every 30 seconds (optional)
+        // Uncomment the line below if you want automatic refresh
+        // setInterval(function() { location.reload(); }, 30000);
+
+        // Show loading state when refreshing
+        function refreshWithLoading() {
+            const refreshBtns = document.querySelectorAll('button[onclick="location.reload()"]');
+            refreshBtns.forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+                btn.disabled = true;
+            });
+            location.reload();
+        }
+
+        // Update all refresh buttons to use the loading function
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshBtns = document.querySelectorAll('button[onclick="location.reload()"]');
+            refreshBtns.forEach(btn => {
+                btn.onclick = refreshWithLoading;
+            });
+        });
+    </script>
+</body>
+</html>
