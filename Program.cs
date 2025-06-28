@@ -1,3 +1,5 @@
+using k8sFormResultViewApp.Services;
+
 namespace k8sFormResultViewApp
 {
     public class Program
@@ -6,8 +8,16 @@ namespace k8sFormResultViewApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.ListenAnyIP(8082); // Match the EXPOSE and Docker -p port
+            });
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            // Add Person Service
+            builder.Services.AddScoped<IPersonService, PersonService>();
 
             var app = builder.Build();
 
